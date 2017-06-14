@@ -1,0 +1,8 @@
+C:\Users\evilz\Documents\GITHUB\fUI\src\fUi\bin\Debug\netcoreapp1.1\fUI.deps.json
+C:\Users\evilz\Documents\GITHUB\fUI\src\fUi\bin\Debug\netcoreapp1.1\fUI.runtimeconfig.json
+C:\Users\evilz\Documents\GITHUB\fUI\src\fUi\bin\Debug\netcoreapp1.1\fUI.runtimeconfig.dev.json
+C:\Users\evilz\Documents\GITHUB\fUI\src\fUi\bin\Debug\netcoreapp1.1\fUI.dll
+C:\Users\evilz\Documents\GITHUB\fUI\src\fUi\bin\Debug\netcoreapp1.1\fUI.pdb
+C:\Users\evilz\Documents\GITHUB\fUI\src\fUi\obj\Debug\netcoreapp1.1\fUI.fsproj.CoreCompileInputs.cache
+C:\Users\evilz\Documents\GITHUB\fUI\src\fUi\obj\Debug\netcoreapp1.1\fUI.dll
+C:\Users\evilz\Documents\GITHUB\fUI\src\fUi\obj\Debug\netcoreapp1.1\fUI.pdb

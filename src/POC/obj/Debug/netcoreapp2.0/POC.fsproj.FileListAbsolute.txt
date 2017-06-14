@@ -1,0 +1,8 @@
+C:\Users\evilz\Documents\GITHUB\fUI\src\POC\bin\Debug\netcoreapp2.0\POC.deps.json
+C:\Users\evilz\Documents\GITHUB\fUI\src\POC\bin\Debug\netcoreapp2.0\POC.runtimeconfig.json
+C:\Users\evilz\Documents\GITHUB\fUI\src\POC\bin\Debug\netcoreapp2.0\POC.runtimeconfig.dev.json
+C:\Users\evilz\Documents\GITHUB\fUI\src\POC\bin\Debug\netcoreapp2.0\POC.dll
+C:\Users\evilz\Documents\GITHUB\fUI\src\POC\bin\Debug\netcoreapp2.0\POC.pdb
+C:\Users\evilz\Documents\GITHUB\fUI\src\POC\obj\Debug\netcoreapp2.0\POC.fsproj.CoreCompileInputs.cache
+C:\Users\evilz\Documents\GITHUB\fUI\src\POC\obj\Debug\netcoreapp2.0\POC.dll
+C:\Users\evilz\Documents\GITHUB\fUI\src\POC\obj\Debug\netcoreapp2.0\POC.pdb
