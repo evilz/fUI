@@ -32,7 +32,17 @@ module NativeMethods =
         dwButtonState:Int32;
         dwControlKeyState:Int32;
         dwEventFlags:Int32;
-    }
+    } with
+        // member defined with type declaration
+        member this.FormatAsString = 
+                let sb = Text.StringBuilder()
+                Printf.bprintf sb  "Mouse event\n"
+                Printf.bprintf sb   "    X ...............:   %0+4i  \n"  this.dwMousePosition.X
+                Printf.bprintf sb   "    Y ...............:   %0+4i  \n" this.dwMousePosition.Y
+                Printf.bprintf sb   "    dwButtonState ...: 0x%i.  \n" this.dwButtonState
+                Printf.bprintf sb   "    dwControlKeyState: 0x%i.  \n" this.dwControlKeyState
+                Printf.bprintf sb   "    dwEventFlags ....: 0x%i.  \n" this.dwEventFlags
+                sb.ToString()
 
     [<StructLayout(LayoutKind.Explicit)>]
     [<Struct>]
@@ -52,7 +62,16 @@ module NativeMethods =
         AsciiChar:Byte;
         [<FieldOffset(12)>]
         dwControlKeyState:Int32;
-    }
+    } with
+        member this.FormatAsString = 
+                let sb = Text.StringBuilder()
+                Printf.bprintf sb  "Key event  \n"
+                Printf.bprintf sb  "    bKeyDown  .......:  %b  \n" this.bKeyDown
+                Printf.bprintf sb  "    wRepeatCount ....:    %0+4i  \n" this.wRepeatCount
+                Printf.bprintf sb  "    wVirtualKeyCode .:    %0+4i  \n" this.wVirtualKeyCode
+                Printf.bprintf sb  "    uChar ...........:       %c  \n" this.UnicodeChar
+                Printf.bprintf sb  "    dwControlKeyState: 0x0x%i  \n" this.dwControlKeyState
+                sb.ToString()
 
     [<StructLayout(LayoutKind.Explicit)>]
     [<Struct>]
@@ -82,77 +101,33 @@ module NativeMethods =
     [<DllImportAttribute("kernel32.dll", SetLastError = true)>]
     extern [<MarshalAs(UnmanagedType.Bool)>] bool  SetConsoleMode(ConsoleHandle hConsoleHandle, Int32 dwMode);
 
+    let (|MouseEvent|_|) inputRecord =
+            if inputRecord.EventType = int16 MOUSE_EVENT then Some inputRecord.MouseEvent
+            else None
 
-
-    // [<StructLayout(LayoutKind.Sequential)>]
-    // [<Struct>]
-    // type POINT = { x:int; y:int; }
-
-    // [<StructLayout(LayoutKind.Sequential)>]
-    // [<Struct>]
-    // type MSLLHOOKSTRUCT = { pt:POINT; mouseData:UInt32; flags:UInt32; time:UInt32; dwExtraInfo:IntPtr; }
-
-    // type LowLevelMouseProc = delegate of int * nativeint * nativeint -> nativeint
-
-    // [<DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)>]
-    // extern nativeint SetWindowsHookEx(int idHook, LowLevelMouseProc lpfn, nativeint hMod, uint32 dwThreadId);
-
-    // [<DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)>]
-    // extern nativeint GetModuleHandle(string lpModuleName);
-
-    // [<DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)>]
-    // extern nativeint CallNextHookEx(nativeint hhk, int nCode, IntPtr wParam, IntPtr lParam);
-
-    // [<DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)>]
-    // extern [<MarshalAs(UnmanagedType.Bool)>] bool  UnhookWindowsHookEx(IntPtr hhk);
-
-
-
-type System.Int32 with                        // x=this
-    member x.Flip i = (x ^^^ (1 <<< i))       // change bit  
-
+    let (|KeyEvent|_|) inputRecord =
+            if inputRecord.EventType = int16 KEY_EVENT then Some inputRecord.KeyEvent
+            else None
 
 [<EntryPoint>]
 let main argv =
-
-        
-    //Console.Clear()
+    Console.Clear()
 
     let handle = NativeMethods.GetStdHandle(NativeMethods.STD_INPUT_HANDLE)
 
     let mutable mode = 0
     let r = NativeMethods.GetConsoleMode (handle,  &mode)
-    printfn "mode %i" mode 
-    if not r  then failwith "paf"
+    if not r  then failwith "Can't get console mode"
 
-    let DISABLE_QUICK_EDIT_MODE = NativeMethods.ENABLE_QUICK_EDIT_MODE.Flip(1)
+    let DISABLE_QUICK_EDIT_MODE = ~~~NativeMethods.ENABLE_QUICK_EDIT_MODE
 
     mode <- mode ||| NativeMethods.ENABLE_MOUSE_INPUT
-    printfn "mode %i" mode 
     mode <- mode &&& DISABLE_QUICK_EDIT_MODE
-    printfn "mode %i" mode 
     mode <- mode ||| NativeMethods.ENABLE_EXTENDED_FLAGS
+
+    if not (NativeMethods.SetConsoleMode(handle, mode)) then failwith "Can't set console mode"
     printfn "mode %i" mode 
-
-    if not (NativeMethods.SetConsoleMode(handle, mode)) then failwith "pouf"
-
-    let mutable record:NativeMethods.INPUT_RECORD =  { 
-        EventType=int16 0 ; 
-        KeyEvent= {
-                    bKeyDown = false;
-                    wRepeatCount= uint16 0;
-                    wVirtualKeyCode= uint16 0;
-                    wVirtualScanCode= uint16 0;
-                    UnicodeChar= char 0;
-                    AsciiChar= byte 0;
-                    dwControlKeyState= 0;
-        }; 
-        MouseEvent= {
-                        dwMousePosition = { X=uint16 0; Y=uint16 0 };
-                        dwButtonState=0;
-                        dwControlKeyState=0;
-                        dwEventFlags=0;}
-        }
+    let mutable record = Unchecked.defaultof<NativeMethods.INPUT_RECORD>
 
     let mutable recordLen = uint32 0;
     let mutable exit = false
@@ -160,23 +135,12 @@ let main argv =
     while not exit do
         
         let read = NativeMethods.ReadConsoleInput(handle, &record, uint32 1, &recordLen)
-        if not read then failwith "ouille"
+        if not read then failwith "Can't read console input"
         Console.SetCursorPosition(0, 0)
-        match record.EventType with
-        | _ when record.EventType = int16 NativeMethods.MOUSE_EVENT -> 
-            printfn "Mouse event"
-            printfn "    X ...............:   %0+4i  "  record.MouseEvent.dwMousePosition.X
-            printfn "    Y ...............:   %0+4i  " record.MouseEvent.dwMousePosition.Y
-            printfn "    dwButtonState ...: 0x%i.  " record.MouseEvent.dwButtonState
-            printfn "    dwControlKeyState: 0x%i.  " record.MouseEvent.dwControlKeyState
-            printfn "    dwEventFlags ....: 0x%i.  " record.MouseEvent.dwEventFlags
-        | _ when record.EventType = int16 NativeMethods.KEY_EVENT ->
-            printfn "Key event  "
-            printfn "    bKeyDown  .......:  %b  " record.KeyEvent.bKeyDown
-            printfn "    wRepeatCount ....:    %0+4i  " record.KeyEvent.wRepeatCount
-            printfn "    wVirtualKeyCode .:    %0+4i  " record.KeyEvent.wVirtualKeyCode
-            printfn "    uChar ...........:       %c  " record.KeyEvent.UnicodeChar
-            printfn "    dwControlKeyState: 0x0x%i  " record.KeyEvent.dwControlKeyState
+        match record with
+        | NativeMethods.MouseEvent mouseEvent -> printf "%s" mouseEvent.FormatAsString
+        | NativeMethods.KeyEvent keyEvent -> 
+            printf "%s" keyEvent.FormatAsString
             if record.KeyEvent.wVirtualKeyCode = uint16 ConsoleKey.Escape then exit <- true
         | _ -> printf "BYE"
 
