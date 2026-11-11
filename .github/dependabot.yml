@@ -1,0 +1,10 @@
+version: 2
+updates:
+  - package-ecosystem: nuget
+    directory: "/src/fUI"
+    schedule:
+      interval: monthly
+  - package-ecosystem: nuget
+    directory: "/src/POC"
+    schedule:
+      interval: monthly
